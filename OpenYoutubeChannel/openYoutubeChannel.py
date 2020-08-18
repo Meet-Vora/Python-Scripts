@@ -37,8 +37,7 @@ def look_for_new_video():
 
             driver = webdriver.Chrome(
                 executable_path=driver_path, chrome_options=options)
-            # driver = webdriver.Chrome(
-            #     executable_path=driver_path)
+
             driver.get(BASE_VIDEO_URL + vidID)
             new_video = True
 
@@ -50,8 +49,10 @@ def look_for_new_video():
 
 # One lookup every 7.2 minutes to have max lookups in 12 hours per day
 try:
+    print("Checking...")
     while True:
         look_for_new_video()
         time.sleep(432)
+        print("Checking again...")
 except KeyboardInterrupt:
     print("\nShutting down...")
