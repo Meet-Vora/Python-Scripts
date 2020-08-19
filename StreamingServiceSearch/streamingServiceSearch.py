@@ -3,6 +3,7 @@ import pickle
 import re
 import sys
 import traceback
+import time
 
 import pyinputplus as pyip
 import requests
@@ -27,10 +28,12 @@ FIREFOX_DRIVER_PATH = "./geckodriver"
 
 BASE_URL = "https://decider.com/"
 
+COOKIES_FILE = "cookies.txt"
+
 
 def open_streaming_service(vid_type, name):
     """
-    Locates and opens the specified movie in an online streaming service in 
+    Locates and opens the specified movie in an online streaming service in
     Chrome or Firefox.
 
     Parameters:
@@ -70,7 +73,7 @@ def open_streaming_service(vid_type, name):
         ans = pyip.inputYesNo("Do you want to open " + "\"" +
                               name + "\"" + " in another service, if available? [yes/no] ")
         if ans == "no":
-            print("\nShutting down...")
+            print("\nEnjoy the " + vid_type + "!")
             break
 
         driver.quit()
@@ -80,13 +83,19 @@ def open_streaming_service(vid_type, name):
             name + "\"" + " in any other streaming services."
 
 
-def launch_browser(driver, video_link, service_used, name):
-    print("\nOpening " + "\"" +
-          name + "\"" + " in " + service_used + "...")
-    driver.get(video_link)
-
-
 def choose_service(service_list, streaming_services):
+    """
+    Finds a streaming service to use based on the ones available from the user
+    and online.
+
+    Parameters:
+    service_list: list of streaming services available to the user
+    streaming_services: list of services the title is available to stream on
+
+    Returns:
+    1. the name of the service used to stream the title, or None if unavailable
+    2. the link to the title, or None if unavailable
+    """
     for sub in service_list:
         lower_sub = sub.lower()
         for li in streaming_services:
@@ -98,72 +107,95 @@ def choose_service(service_list, streaming_services):
     return None, None
 
 
+def launch_browser(driver, video_link, service_used, name):
+    print("\nOpening " + "\"" +
+          name + "\"" + " in " + service_used + "...")
+    driver.get(video_link)
+    time.sleep(5)
+    save_cookies(driver, COOKIES_FILE)
+    load_cookies(driver, COOKIES_FILE)
+
+
+def save_cookies(driver, location):
+    # if not os.isFile("cookies.txt"):
+
+    pickle.dump(driver.get_cookies(), open(location, "wb+"))
+
+
+def load_cookies(driver, location, url=None):
+
+    cookies = pickle.load(open(location, "rb"))
+    driver.delete_all_cookies()
+    # have to be on a page before you can add any cookies, any page - does not matter which
+    # driver.get("https://google.com" if url is None else url)
+    for cookie in cookies:
+        if isinstance(cookie.get('expiry'), float):  # Checks if the instance expiry a float
+            # it converts expiry cookie to a int
+            cookie['expiry'] = int(cookie['expiry'])
+        driver.add_cookie(cookie)
+
+
 def setup_driver():
+    """
+    Instantiates a driver for Chrome or Brave that opens the browser.
+
+    Retuns:
+    webdriver instance
+    """
 
     options = webdriver.ChromeOptions()
-    options.add_argument(
-        "user-data-dir={}".format(".config/google-chrome/Default"))
+    # options.add_argument(
+    #     "user-data-dir={}".format(".config/google-chrome/Default"))
 
-    ##### ALTERNATE BETWEEN THE NEXT TWO CODE BLOCKS #####
-    ##### TO SWAP BETWEEN CHROME AND FIREFOX #####
-    # driver = webdriver.Firefox(executable_path=FIREFOX_DRIVER_PATH)
+    ##### UNCOMMENT NEXT TWO LINES TO USE BRAVE BROWSER #####
+    # brave_path = "/usr/bin/brave-browser"
+    # options.binary_location = brave_path
 
     driver = webdriver.Chrome(
         executable_path=CHROME_DRIVER_PATH, chrome_options=options)
-    # driver.get(video_link)
     return driver
-# pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
-# driver.delete_all_cookies()
-
-# cookies = pickle.load(open("cookies.pkl", "rb"))
-# for cookie in cookies:
-#     driver.add_cookie(cookie)
-
-# driver.quit()
-
-# driver = webdriver.Firefox()
-# driver.get(video_hyperlink)
 
 
 def setup_cmd_interface():
+    """
+    Sets up the command line interface.
+
+    Returns:
+    an object containing the arguments specified by the user
+    """
     description = "Description: This program automatically finds the user-specified show or " \
         "movie on their subscribed or free streaming services, and opens it in " \
         "a browser, ready to play."
 
-    test = "Enter \"movie\" or \"show\" to specify whether you would like to " \
-        " watch a show or movie, and enter its name in quotes. The program will " \
-        "automatically find a streaming service it is available on, and open " \
-        "it in a browser."
-
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-n", "--name", required=True)
-    parser.add_argument("-d", "--debug", action="store_true")
+    parser.add_argument("-n", "--name", required=True, help="title of the "
+                        "show/movie, specified after this argument")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="prints the stack trace")
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-t", "--type", choices=["show", "movie"])
-    group.add_argument("-s", "--show",  action="store_true")
-    group.add_argument("-m", "--movie",  action="store_true")
+    group.add_argument("-t", "--type", choices=["show", "movie"], help="idenitifies the type of "
+                       "video, either a show or movie, specified after this argument")
+    group.add_argument("-s", "--show",  action="store_true",
+                       help="specifies video type as a show")
+    group.add_argument("-m", "--movie",  action="store_true",
+                       help="specifies video type as a movie. if [-s | -m | -t] "
+                       "are unspecified, video type defaults to movie")
 
-    # should add config for list of streaming services/cable owned, browser to use (chrome or firefox)
-
-    # parser.add_argument('-b', "--base", type=int,
-    #                     help="defines the base value")
-    # parser.add_argument("-s", "--show", action="store_true")
-
-    # parser.add_argument("name")
-    # parser.add_argument("videoType", default="movie", help="specify video type as show or movie. "
-    # "Defaults to movie if unspecified")
-
-    # parser.add_argument("movie/show", help="specifies video type")
-    # parser.add_argument("show", help="specify video type as show")
-    # parser.add_argument("movie", help="specify video type as movie")
-    # parser.add_argument("<name>",
-    #                     help="Name of the movie/show. Replace <name> with the name in quotes")
     args = parser.parse_args()
     return args
 
 
 def exception_handler(exception_type, exception, traceback):
+    """
+    Handles exceptions in a user-friendly format. Can be overriden to print the entire
+    stack trace using the -d and --debug tags. 
+
+    Parameters:
+    exception_type: type of exception
+    exception: exception instance
+    traceback: instance of the stack trace 
+    """
     print("\nERROR: {}".format(exception))
 
 
@@ -183,5 +215,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nShutting down...")
     except WebDriverException:
-        print("\nERROR: Cannot run multiple instances of Chrome at once. "
-              "Please close all your browsers launched with this program before running the program again.")
+        raise WebDriverException(msg="Cannot run multiple instances of Chrome at once. "
+                                 "Please close all your browser tabs launched with this program "
+                                 "before running the program again.")

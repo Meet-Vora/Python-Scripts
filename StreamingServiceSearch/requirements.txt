@@ -7,3 +7,4 @@ requests==2.24.0
 selenium==2.48.0
 soupsieve==2.0.1
 urllib3==1.25.10
+pyinputplus==0.2.10
