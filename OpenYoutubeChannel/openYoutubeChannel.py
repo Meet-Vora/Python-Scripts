@@ -1,7 +1,9 @@
-from selenium import webdriver
-import requests
-import time
 import json
+import time
+
+import requests
+from selenium import webdriver
+
 from api_key import API_KEY
 
 BASE_VIDEO_URL = "https://www.youtube.com/watch?v="
