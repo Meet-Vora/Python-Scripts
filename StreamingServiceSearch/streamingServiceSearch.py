@@ -1,96 +1,128 @@
+import argparse
+import pickle
 import re
 import sys
-import pickle
+import traceback
+
+import pyinputplus as pyip
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-import argparse
+from selenium.common.exceptions import WebDriverException
 
-# get show/movie from command line argument
-# make http request to decider website
-# save hyperlink to the streaming service
-# open link in chrome/firefox
-# put help command for the program
-# make a config file that sees what browser to use
-# after making the app executable, can make sure he adds it to path and then
-#       can see all the options for usage with configuring the browser
-# All functionality with command line:
-#   1. adding/removing/listing all streaming services
-#   2. changing default browser
-#   3. can specify browser with command line arguments
-#   4. help function with command line
 
-TEST_SHOW = "Game of Thrones"
-BASE_URL = "https://decider.com/"
+##### ADD/REMOVE SUBSCRIPTION SERVICES ON LINES 20-23 TO CHANGE THE ONES #####
+##### THE PROGRAM OPENS. IF YOU REMOVE AN ENTIRE LIST, REMOVE THE LIST #####
+##### NAME ON LINE 43 AS WELL. #####
 
+### Can also change the order of the streaming services in ###
+### each list to change the order in which they are opened ###
 SUBSCRIPTION_LIST = ["Netflix", "Hulu", "HBO NOW", "Prime Video"]
-CABLE_LIST = ["HBO MAX"]
 FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
-BUY = []
+CABLE_LIST = ["HBO MAX"]
+BUY = ["YouTube"]
 
 CHROME_DRIVER_PATH = "./chromedriver"
 FIREFOX_DRIVER_PATH = "./geckodriver"
 
+BASE_URL = "https://decider.com/"
 
-# def open_streaming_service(show_type, show_name):
-def find_streaming_service(vid_type, name):
 
-    name = name.lower().replace(" ", "-")
-    url = BASE_URL + vid_type + "/" + name
+def open_streaming_service(vid_type, name):
+    """
+    Locates and opens the specified movie in an online streaming service in 
+    Chrome or Firefox.
+
+    Parameters:
+    vid_type (String): specifies if the video is a movie or show. Defaults to movie
+    name (String): title of show/movie to search for
+    """
+
+    ###### CHANGE SERVICES HERE IF YOU ADD/REMOVE LISTS ABOVE ######
+    ### Can also change the order of the lists to change the search order ###
+    all_services = SUBSCRIPTION_LIST + FREE_SERVICES + BUY + CABLE_LIST
+
+    url_name = name.lower().replace(" ", "-")
+    url = BASE_URL + vid_type + "/" + url_name
 
     response = requests.get(url)
+    if response.status_code not in range(200, 299):
+        raise ValueError("Cannot find " + vid_type +
+                         " with title " + "\"" + name + "\".")
+
     soup = BeautifulSoup(response.content, 'html.parser')
     streaming_services = soup.find(
         "ul", class_="reelgood-platforms").find_all("li")
 
-    # ignores the "more options" element from the list
-    paid_service = False
-    for li in streaming_services[:-1]:
-        data_go_event = li.a["data-ga-event"]
-        for sub in SUBSCRIPTION_LIST:
-            if not paid_service and data_go_event.find(sub) != -1:
-                video_link = li.a["href"]
-                paid_service = True
+    service_list = all_services[:]
+    msg = "Sorry, could not open " + "\"" + \
+        name + "\"" + " in any of your available streaming services."
+    while True:
+        driver = setup_driver()
+        service_used, video_link = choose_service(
+            service_list, streaming_services)
+        if service_used is None:
+            print(msg)
+            break
 
-    if paid_service:
-        # go to link in browser
-        launch_browser(video_link)
-        pass
+        launch_browser(driver, video_link, service_used, name)
 
-    else:
-        # check free services
-        pass
+        ans = pyip.inputYesNo("Do you want to open " + "\"" +
+                              name + "\"" + " in another service, if available? [yes/no] ")
+        if ans == "no":
+            print("\nShutting down...")
+            break
 
-    # if no free services, then return None
+        driver.quit()
+        service_list = service_list[service_list.index(
+            service_used) + 1:]
+        msg = "\nSorry, could not open " + "\"" + \
+            name + "\"" + " in any other streaming services."
 
-    # with open("test.txt", "w") as file:
-    #     file.write(str(streaming_services))
+
+def launch_browser(driver, video_link, service_used, name):
+    print("\nOpening " + "\"" +
+          name + "\"" + " in " + service_used + "...")
+    driver.get(video_link)
 
 
-def launch_browser(video_hyperlink):
-    # driver = webdriver.Firefox(executable_path=FIREFOX_DRIVER_PATH)
+def choose_service(service_list, streaming_services):
+    for sub in service_list:
+        lower_sub = sub.lower()
+        for li in streaming_services:
+            if li.has_attr("class"):
+                data_go_event = li.a["data-ga-event"].lower()
+                if data_go_event.find(lower_sub) != -1:
+                    video_link = li.a["href"]
+                    return sub, video_link
+    return None, None
+
+
+def setup_driver():
 
     options = webdriver.ChromeOptions()
     options.add_argument(
         "user-data-dir={}".format(".config/google-chrome/Default"))
-    # brave_path = "/usr/bin/brave-browser"
-    # options.binary_location = brave_path
+
+    ##### ALTERNATE BETWEEN THE NEXT TWO CODE BLOCKS #####
+    ##### TO SWAP BETWEEN CHROME AND FIREFOX #####
+    # driver = webdriver.Firefox(executable_path=FIREFOX_DRIVER_PATH)
 
     driver = webdriver.Chrome(
         executable_path=CHROME_DRIVER_PATH, chrome_options=options)
+    # driver.get(video_link)
+    return driver
+# pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
+# driver.delete_all_cookies()
 
-    driver.get(video_hyperlink)
-    # pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
-    # driver.delete_all_cookies()
+# cookies = pickle.load(open("cookies.pkl", "rb"))
+# for cookie in cookies:
+#     driver.add_cookie(cookie)
 
-    # cookies = pickle.load(open("cookies.pkl", "rb"))
-    # for cookie in cookies:
-    #     driver.add_cookie(cookie)
+# driver.quit()
 
-    # driver.quit()
-
-    # driver = webdriver.Firefox()
-    # driver.get(video_hyperlink)
+# driver = webdriver.Firefox()
+# driver.get(video_hyperlink)
 
 
 def setup_cmd_interface():
@@ -105,6 +137,7 @@ def setup_cmd_interface():
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-n", "--name", required=True)
+    parser.add_argument("-d", "--debug", action="store_true")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-t", "--type", choices=["show", "movie"])
@@ -127,21 +160,28 @@ def setup_cmd_interface():
     # parser.add_argument("<name>",
     #                     help="Name of the movie/show. Replace <name> with the name in quotes")
     args = parser.parse_args()
-    print(args)
     return args
 
 
+def exception_handler(exception_type, exception, traceback):
+    print("\nERROR: {}".format(exception))
+
+
 if __name__ == "__main__":
-    args = setup_cmd_interface()
-    vid_type = 'movie'
+    try:
+        args = setup_cmd_interface()
 
-    if args.show or args.type == 'show':
-        vid_type = 'show'
+        if not args.debug:
+            sys.excepthook = exception_handler
 
-    find_streaming_service(vid_type, args.name)
+        vid_type = 'movie'
+        if args.show or args.type == 'show':
+            vid_type = 'show'
 
-    # if type != None and type != 'movie' and type != 'show':
-    #     throw error
-    # if not movie and not show and type == None or type != 'show' or type != 'movie':
+        open_streaming_service(vid_type, args.name)
 
-    # if movie, show are false, and type is None/incorrect string,
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+    except WebDriverException:
+        print("\nERROR: Cannot run multiple instances of Chrome at once. "
+              "Please close all your browsers launched with this program before running the program again.")
