@@ -186,7 +186,7 @@ if __name__ == "__main__":
         if args.show or args.type == 'show':
             vid_type = 'show'
 
-        open_streaming_service(vid_type, args.name.trim())
+        open_streaming_service(vid_type, args.name.strip())
 
     except KeyboardInterrupt:
         print("\nShutting down...")
