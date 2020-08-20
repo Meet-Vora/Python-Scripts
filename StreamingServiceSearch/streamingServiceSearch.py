@@ -23,12 +23,10 @@ FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
 CABLE_LIST = ["HBO MAX"]
 BUY = ["YouTube"]
 
-CHROME_DRIVER_PATH = "./chromedriver"
-FIREFOX_DRIVER_PATH = "./geckodriver"
+# CHROME_DRIVER_PATH = "./chromedriver_linux"
+CHROME_DRIVER_PATH = "./chromedriver_mac"
 
 BASE_URL = "https://decider.com/"
-
-COOKIES_FILE = "cookies.txt"
 
 
 def open_streaming_service(vid_type, name):
@@ -111,29 +109,6 @@ def launch_browser(driver, video_link, service_used, name):
     print("\nOpening " + "\"" +
           name + "\"" + " in " + service_used + "...")
     driver.get(video_link)
-
-#     time.sleep(5)
-#     save_cookies(driver, COOKIES_FILE)
-#     load_cookies(driver, COOKIES_FILE)
-
-
-# def save_cookies(driver, location):
-#     # if not os.isFile("cookies.txt"):
-
-#     pickle.dump(driver.get_cookies(), open(location, "wb+"))
-
-
-# def load_cookies(driver, location, url=None):
-
-#     cookies = pickle.load(open(location, "rb"))
-#     driver.delete_all_cookies()
-#     # have to be on a page before you can add any cookies, any page - does not matter which
-#     # driver.get("https://google.com" if url is None else url)
-#     for cookie in cookies:
-#         if isinstance(cookie.get('expiry'), float):  # Checks if the instance expiry a float
-#             # it converts expiry cookie to a int
-#             cookie['expiry'] = int(cookie['expiry'])
-#         driver.add_cookie(cookie)
 
 
 def setup_driver():
