@@ -23,8 +23,8 @@ FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
 CABLE_LIST = ["HBO MAX"]
 BUY = ["YouTube"]
 
-# CHROME_DRIVER_PATH = "./chromedriver_linux"
-CHROME_DRIVER_PATH = "./chromedriver_mac"
+CHROME_DRIVER_PATH = "./chromedriver_linux"
+# CHROME_DRIVER_PATH = "./chromedriver_mac"
 
 BASE_URL = "https://decider.com/"
 
