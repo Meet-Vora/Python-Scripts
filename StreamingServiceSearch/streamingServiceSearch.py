@@ -18,10 +18,11 @@ from selenium.common.exceptions import WebDriverException
 
 ### Can also change the order of the streaming services in ###
 ### each list to change the order in which they are opened ###
-SUBSCRIPTION_LIST = ["Netflix", "Hulu", "HBO NOW", "Prime Video"]
+SUBSCRIPTION_LIST = ["Netflix", "Hulu", "HBO NOW", "Prime Video", "STARZ", 
+                     "AMC", "AMC Premiere", "fuboTV"]
 FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
 CABLE_LIST = ["HBO MAX"]
-BUY = ["YouTube"]
+BUY = ["YouTube", "iTunes", "Google Play", "Microsoft Store"]
 
 CHROME_DRIVER_PATH = "./chromedriver_linux"
 # CHROME_DRIVER_PATH = "./chromedriver_mac"
