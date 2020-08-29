@@ -7,7 +7,7 @@ import os
 import math
 import json
 import requests
-from api_key import API_KEY
+# from api_key import API_KEY
 
 BASE_API_URL = "https://www.googleapis.com/youtube/v3/playlistItems?"
 
