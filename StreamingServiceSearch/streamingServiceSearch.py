@@ -78,7 +78,7 @@ def open_streaming_service(vid_type, name):
         service_list = service_list[service_list.index(
             service_used) + 1:]
         msg = "\nSorry, could not open " + "\"" + \
-            name + "\"" + " in any other streaming services."
+            name + "\"" + " in any other streaming service."
 
 
 def choose_service(service_list, streaming_services):
