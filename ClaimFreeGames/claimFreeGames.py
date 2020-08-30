@@ -1,7 +1,7 @@
 from pprint import pprint
 
 import time
-import requests
+# import requests
 from bs4 import BeautifulSoup
 # from lxml import html
 from selenium import webdriver
