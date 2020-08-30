@@ -50,13 +50,13 @@ def claim_games(game_link):
         consent_paragraph = driver.find_element_by_xpath(
             consent_paragraph_xpath)
         if consent_paragraph is not None:
-            click_button(driver, consent_button_xpath)
+            click_element(driver, consent_button_xpath)
 
     except NoSuchElementException:
         print("No consent button")
 
-    click_button(driver, claim_button_xpath)
-    click_button(driver, placeorder_button_expath)
+    click_element(driver, claim_button_xpath)
+    click_element(driver, placeorder_button_expath)
 
     # if driver.find_element_by_xpath("/html/body/div/div/div[4]/main/div[2]/div/div[1]/p/text()") != "":
     #     button_xpath = "/html/body/div/div/div[4]/main/div[2]/div/div[2]/div/button"
@@ -66,8 +66,8 @@ def claim_games(game_link):
     #         claim_button_text_xpath)
     #     # print("BUTTON TEXT:", claim_button_text.text)
     #     if claim_button_text.text.lower() == "get":
-    #         click_button(driver, claim_button_xpath)
-    #         click_button(driver, placeorder_button_expath)
+    #         click_element(driver, claim_button_xpath)
+    #         click_element(driver, placeorder_button_expath)
 
     # except NoSuchElementException:
     #     print("Button is not get button, or place order button doesn't work")
@@ -85,41 +85,55 @@ def claim_games(game_link):
     # burner = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, CLASSNAMES[0])))
 
 
-def click_button(driver, xpath):
+def click_element(driver, xpath):
     # wait = WebDriverWait(driver, 30, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException,
     #    ElementNotSelectableException])
     print("XPATH:", xpath)
-    button = None
+    element = None
     try:
-        # button = wait.until(EC.element_to_be_clickable(
+        # element = wait.until(EC.element_to_be_clickable(
         #     (By.XPATH, xpath)))
-        button = driver.find_element_by_xpath(xpath)
-        if button is not None:
-            button.click()
+        element = driver.find_element_by_xpath(xpath)
+        if element is not None:
+            element.click()
             time.sleep(3)
     except NoSuchElementException:
         print("DIDN'T WORK")
 
 
+def logged_in(driver, login_xpath):
+    logged_in = False
+
+    try:
+        login_button = driver.find_element_by_xpath(login_xpath)
+    except NoSuchElementException:
+        logged_in = True
+
+    return logged_in
+
+
 def get_game_links():
     driver = setup_driver()
-    # time.sleep(4)
+    time.sleep(2)
+    login_xpath = "//a[@title = 'Sign in']"
 
-    game_divs, game_links = [], []
-    for className in CLASSNAMES:
-        game_divs += driver.find_elements_by_class_name(className)
+    if logged_in(driver, login_xpath):
+        game_divs, game_links = [], []
+        for className in CLASSNAMES:
+            game_divs += driver.find_elements_by_class_name(className)
 
-    for game_div in game_divs:
-        soup = BeautifulSoup(game_div.get_attribute(
-            'innerHTML'), "html.parser")
-        game_links += [BASE_URL + soup.find('a')['href']]
+        for game_div in game_divs:
+            soup = BeautifulSoup(game_div.get_attribute(
+                'innerHTML'), "html.parser")
+            game_links += [BASE_URL + soup.find('a')['href']]
 
-    driver.quit()
+        driver.quit()
 
-    for game_link in game_links:
-        claim_games(game_link)
-    print("Claimed all games!")
-
+        for game_link in game_links:
+            claim_games(game_link)
+        print("Claimed all games!")
+    else:
+        click_element(click_element(driver, login_xpath))
     # for elem in games:
     #     # elem = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, className)))
     #     elem.click()
@@ -206,7 +220,7 @@ def test():
     xpath = "//button[contains(., 'Get')]"
     driver = setup_driver(
         "https://www.epicgames.com/store/en-US/product/paladins/home")
-    click_button(driver, xpath)
+    click_element(driver, xpath)
 
 
 # driver = setup_driver()
