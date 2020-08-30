@@ -18,6 +18,7 @@ from selenium.common.exceptions import *
 BASE_URL = "https://www.epicgames.com"
 FREEGAME_URL_EXTENSION = "/store/en-US/free-games"
 CHROME_DRIVER_PATH = "./chromedriver_linux"
+# CHROME_DRIVER_PATH = "./chromedriver_windows"
 CLASSNAMES = ["css-1oymjns-CardGridDesktopPortrait__cardWrapperDesktop",
               "css-1qv6lea-CardGridDesktopLandscape__cardWrapperDesktop",
               "css-1adx3p4-BrowseGrid-styles__card"]
