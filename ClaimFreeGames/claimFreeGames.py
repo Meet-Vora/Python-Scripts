@@ -15,10 +15,14 @@ from selenium.common.exceptions import *
 # Get a list of all the free games available
 # Click on each one, and then grab them for free
 
+CHROME_DRIVER_PATH = "../chromedriver_linux"
+# CHROME_DRIVER_PATH = "../chromedriver_mac"
+# CHROME_DRIVER_PATH = "../chromedriver_windows"
+
 BASE_URL = "https://www.epicgames.com"
 FREEGAME_URL_EXTENSION = "/store/en-US/free-games"
-CHROME_DRIVER_PATH = "./chromedriver_linux"
-# CHROME_DRIVER_PATH = "./chromedriver_windows"
+
+
 CLASSNAMES = ["css-1oymjns-CardGridDesktopPortrait__cardWrapperDesktop",
               "css-1qv6lea-CardGridDesktopLandscape__cardWrapperDesktop",
               "css-1adx3p4-BrowseGrid-styles__card"]
@@ -101,8 +105,8 @@ def logged_in(driver, login_xpath):
     return logged_in
 
 
-def sleep(time=3):
-    time.sleep(time)
+def sleep(sleep_time=3):
+    time.sleep(sleep_time)
 
 
 def find(driver, path, search_type='xpath'):
