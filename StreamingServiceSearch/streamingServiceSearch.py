@@ -125,7 +125,6 @@ def setup_driver(browser):
     options.add_argument(
         "user-data-dir={}".format(".config/google-chrome"))
 
-    ##### UNCOMMENT NEXT TWO LINES TO USE BRAVE BROWSER #####
     if browser == "brave":
         brave_path = "/usr/bin/brave-browser"
         options.binary_location = brave_path
