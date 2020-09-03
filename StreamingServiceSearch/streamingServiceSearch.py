@@ -18,19 +18,20 @@ from selenium.common.exceptions import WebDriverException
 
 ### Can also change the order of the streaming services in ###
 ### each list to change the order in which they are opened ###
-SUBSCRIPTION_LIST = ["Netflix", "Hulu", "HBO NOW", "Prime Video", "STARZ", 
+SUBSCRIPTION_LIST = ["Netflix", "Hulu", "HBO NOW", "Prime Video", "STARZ",
                      "AMC", "AMC Premiere", "fuboTV"]
 FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
 CABLE_LIST = ["HBO MAX"]
 BUY = ["YouTube", "iTunes", "Google Play", "Microsoft Store"]
 
-CHROME_DRIVER_PATH = "./chromedriver_linux"
-# CHROME_DRIVER_PATH = "./chromedriver_mac"
+CHROME_DRIVER_PATH = "../chromedriver_linux"
+# CHROME_DRIVER_PATH = "../chromedriver_mac"
+# CHROME_DRIVER_PATH = "../chromedriver_windows"
 
 BASE_URL = "https://decider.com/"
 
 
-def open_streaming_service(vid_type, name):
+def open_streaming_service(vid_type, name, browser="chrome"):
     """
     Locates and opens the specified movie in an online streaming service in
     Chrome or Firefox.
@@ -60,7 +61,7 @@ def open_streaming_service(vid_type, name):
     msg = "Sorry, could not open " + "\"" + \
         name + "\"" + " in any of your available streaming services."
     while True:
-        driver = setup_driver()
+        driver = setup_driver(browser=browser)
         service_used, video_link = choose_service(
             service_list, streaming_services)
         if service_used is None:
@@ -112,7 +113,7 @@ def launch_browser(driver, video_link, service_used, name):
     driver.get(video_link)
 
 
-def setup_driver():
+def setup_driver(browser):
     """
     Instantiates a driver for Chrome or Brave that opens the browser.
 
@@ -125,11 +126,13 @@ def setup_driver():
         "user-data-dir={}".format(".config/google-chrome"))
 
     ##### UNCOMMENT NEXT TWO LINES TO USE BRAVE BROWSER #####
-    # brave_path = "/usr/bin/brave-browser"
-    # options.binary_location = brave_path
+    if browser == "brave":
+        brave_path = "/usr/bin/brave-browser"
+        options.binary_location = brave_path
 
     driver = webdriver.Chrome(
         executable_path=CHROME_DRIVER_PATH, chrome_options=options)
+
     return driver
 
 
@@ -150,14 +153,18 @@ def setup_cmd_interface():
     parser.add_argument("-d", "--debug", action="store_true",
                         help="prints the stack trace")
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-t", "--type", choices=["show", "movie"], help="idenitifies the type of "
-                       "video, either a show or movie, specified after this argument")
-    group.add_argument("-s", "--show",  action="store_true",
-                       help="specifies video type as a show")
-    group.add_argument("-m", "--movie",  action="store_true",
-                       help="specifies video type as a movie. if [-s | -m | -t] "
-                       "are unspecified, video type defaults to movie")
+    title_group = parser.add_mutually_exclusive_group()
+    title_group.add_argument("-t", "--type", choices=["show", "movie"], help="idenitifies the type of "
+                             "video, either a show or movie, specified after this argument")
+    title_group.add_argument("-s", "--show",  action="store_true",
+                             help="specifies video type as a show")
+    title_group.add_argument("-m", "--movie",  action="store_true",
+                             help="specifies video type as a movie. if [-s | -m | -t] "
+                             "are unspecified, video type defaults to movie")
+
+    # browser_group = parser.add_mutually_exclusive_group()
+    parser.add_argument("-b", "--brave", action="store_true",
+                        help="launches show in brave browser instead of defaulting to Chrome")
 
     args = parser.parse_args()
     return args
@@ -179,6 +186,10 @@ def exception_handler(exception_type, exception, traceback):
 if __name__ == "__main__":
     try:
         args = setup_cmd_interface()
+        browser = "chrome"
+
+        if args.brave:
+            browser = "brave"
 
         if not args.debug:
             sys.excepthook = exception_handler
@@ -187,7 +198,7 @@ if __name__ == "__main__":
         if args.show or args.type == 'show':
             vid_type = 'show'
 
-        open_streaming_service(vid_type, args.name.strip())
+        open_streaming_service(vid_type, args.name.strip(), browser=browser)
 
     except KeyboardInterrupt:
         print("\nShutting down...")
