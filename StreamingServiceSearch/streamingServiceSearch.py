@@ -210,7 +210,8 @@ def get_os(filename):
 if __name__ == "__main__":
     try:
         args = setup_cmd_interface()
-        chromedriver_path = "../chromedriver_"
+        dirname = os.path.dirname(__file__)
+        chromedriver_path = os.path.join(dirname, "../chromedriver_")
 
         defaults_filename = "defaults.json"
         file_exists = os.path.isfile(defaults_filename)
