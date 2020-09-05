@@ -26,9 +26,11 @@ FREE_SERVICES = ["Funimation", "Tubi TV", "Crunchyroll", "VUDU"]
 CABLE_LIST = ["HBO MAX"]
 BUY = ["YouTube", "iTunes", "Google Play", "Microsoft Store"]
 
-CHROME_DRIVER_PATH = "../chromedriver_linux"
-# CHROME_DRIVER_PATH = "../chromedriver_mac"
-# CHROME_DRIVER_PATH = "../chromedriver_windows"
+
+DIRNAME = os.path.dirname(__file__)
+# CHROME_DRIVER_PATH = "../chromedriver_linux"
+# # CHROME_DRIVER_PATH = "../chromedriver_mac"
+# # CHROME_DRIVER_PATH = "../chromedriver_windows"
 
 BASE_URL = "https://decider.com/"
 
@@ -62,6 +64,7 @@ def open_streaming_service(vid_type, name, chromedriver_path, browser="chrome"):
     service_list = all_services[:]
     msg = "Sorry, could not open " + "\"" + \
         name + "\"" + " in any of your available streaming services."
+
     while True:
         driver = setup_driver(
             browser=browser, chromedriver_path=chromedriver_path)
@@ -123,10 +126,11 @@ def setup_driver(browser, chromedriver_path):
     Retuns:
     webdriver instance
     """
+    data_dir = os.path.join(DIRNAME, ".config/google-chrome")
 
     options = webdriver.ChromeOptions()
     options.add_argument(
-        "user-data-dir={}".format(".config/google-chrome"))
+        "user-data-dir={}".format(data_dir))
 
     if browser == "brave":
         brave_path = "/usr/bin/brave-browser"
@@ -210,9 +214,8 @@ def get_os(filename):
 if __name__ == "__main__":
     try:
         args = setup_cmd_interface()
-        dirname = os.path.dirname(__file__)
-        chromedriver_path = os.path.join(dirname, "../chromedriver_")
-        defaults_filename = os.path.join(dirname, "defaults.json")
+        chromedriver_path = os.path.join(DIRNAME, "../chromedriver_")
+        defaults_filename = os.path.join(DIRNAME, "defaults.json")
 
         file_exists = os.path.isfile(defaults_filename)
         os_prompt = "\nPlease choose the Operating System you would like to switch " \
