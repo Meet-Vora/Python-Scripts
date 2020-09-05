@@ -166,6 +166,9 @@ def setup_cmd_interface():
     parser.add_argument("-c", "--config-os", action="store_true", help="Opens a config menu that"
                         "lets you select your Operating System.")
 
+    parser.add_argument("-p", "--print-os", action="store_true",
+                        help="Prints your current operating system.")
+
     title_group = parser.add_mutually_exclusive_group()
     title_group.add_argument("-t", "--type", choices=["show", "movie"], help="idenitifies the type of "
                              "video, either a show or movie, specified after this argument")
@@ -199,7 +202,7 @@ def exception_handler(exception_type, exception, traceback):
 
 def save_os(filename, prompt):
     op_sys = pyip.inputMenu(prompt=prompt, choices=[
-        "windows", "mac", "linux"], numbered=True)
+        "Windows", "Mac", "Linux"], numbered=True)
 
     with open(filename, "w+") as outfile:
         json.dump({"operating system": op_sys}, outfile)
@@ -217,28 +220,35 @@ if __name__ == "__main__":
         chromedriver_path = os.path.join(DIRNAME, "../chromedriver_")
         defaults_filename = os.path.join(DIRNAME, "defaults.json")
 
-        file_exists = os.path.isfile(defaults_filename)
+        datafile_exists = os.path.isfile(defaults_filename)
         os_prompt = "\nPlease choose the Operating System you would like to switch " \
-            "to:\n" if file_exists else "\nBefore you run this program, " \
+            "to:\n" if datafile_exists else "\nBefore you run this program, " \
             "please select your Operating System:\n"
 
-        if args.config_os or not file_exists:
-            save_os(filename=defaults_filename, prompt=os_prompt)
+        if args.print_os:
+            if datafile_exists:
+                print("Your Current Operating System:",
+                      get_os(filename=defaults_filename))
+            else:
+                print("You do not currently have any Operating System configured.")
+        else:
+            if args.config_os or not datafile_exists:
+                save_os(filename=defaults_filename, prompt=os_prompt)
 
-        chromedriver_path += get_os(filename=defaults_filename)
-        browser = "chrome"
-        if args.brave:
-            browser = "brave"
+            chromedriver_path += get_os(filename=defaults_filename).lower()
+            browser = "chrome"
+            if args.brave:
+                browser = "brave"
 
-        if not args.debug:
-            sys.excepthook = exception_handler
+            if not args.debug:
+                sys.excepthook = exception_handler
 
-        vid_type = 'movie'
-        if args.show or args.type == 'show':
-            vid_type = 'show'
+            vid_type = 'movie'
+            if args.show or args.type == 'show':
+                vid_type = 'show'
 
-        open_streaming_service(vid_type, args.name.strip(
-        ), browser=browser, chromedriver_path=chromedriver_path)
+            open_streaming_service(vid_type, args.name.strip(
+            ), browser=browser, chromedriver_path=chromedriver_path)
 
     except KeyboardInterrupt:
         print("\nShutting down...")
