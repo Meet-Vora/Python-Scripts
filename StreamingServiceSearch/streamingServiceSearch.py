@@ -212,8 +212,8 @@ if __name__ == "__main__":
         args = setup_cmd_interface()
         dirname = os.path.dirname(__file__)
         chromedriver_path = os.path.join(dirname, "../chromedriver_")
+        defaults_filename = os.path.join(dirname, "defaults.json")
 
-        defaults_filename = "defaults.json"
         file_exists = os.path.isfile(defaults_filename)
         os_prompt = "\nPlease choose the Operating System you would like to switch " \
             "to:\n" if file_exists else "\nBefore you run this program, " \
