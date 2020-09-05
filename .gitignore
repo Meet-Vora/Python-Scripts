@@ -1,4 +1,5 @@
 OpenYoutubeChannel/api_key.py
 DownloadYoutubePlaylist/api_key.py
 StreamingServiceSearch/.config/*
+StreamingServiceSearch/defaults.json
 ClaimFreeGames/.config/*
