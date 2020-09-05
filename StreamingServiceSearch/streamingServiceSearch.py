@@ -1,9 +1,11 @@
 import argparse
-import pickle
+# import pickle
 import re
 import sys
 import traceback
 import time
+import os
+import json
 
 import pyinputplus as pyip
 import requests
@@ -31,7 +33,7 @@ CHROME_DRIVER_PATH = "../chromedriver_linux"
 BASE_URL = "https://decider.com/"
 
 
-def open_streaming_service(vid_type, name, browser="chrome"):
+def open_streaming_service(vid_type, name, chromedriver_path, browser="chrome"):
     """
     Locates and opens the specified movie in an online streaming service in
     Chrome or Firefox.
@@ -61,7 +63,8 @@ def open_streaming_service(vid_type, name, browser="chrome"):
     msg = "Sorry, could not open " + "\"" + \
         name + "\"" + " in any of your available streaming services."
     while True:
-        driver = setup_driver(browser=browser)
+        driver = setup_driver(
+            browser=browser, chromedriver_path=chromedriver_path)
         service_used, video_link = choose_service(
             service_list, streaming_services)
         if service_used is None:
@@ -113,7 +116,7 @@ def launch_browser(driver, video_link, service_used, name):
     driver.get(video_link)
 
 
-def setup_driver(browser):
+def setup_driver(browser, chromedriver_path):
     """
     Instantiates a driver for Chrome or Brave that opens the browser.
 
@@ -130,7 +133,7 @@ def setup_driver(browser):
         options.binary_location = brave_path
 
     driver = webdriver.Chrome(
-        executable_path=CHROME_DRIVER_PATH, chrome_options=options)
+        executable_path=chromedriver_path, chrome_options=options)
 
     return driver
 
@@ -152,6 +155,13 @@ def setup_cmd_interface():
     parser.add_argument("-d", "--debug", action="store_true",
                         help="prints the stack trace")
 
+    # browser_group = parser.add_mutually_exclusive_group()
+    parser.add_argument("-b", "--brave", action="store_true",
+                        help="launches show in brave browser instead of defaulting to Chrome")
+
+    parser.add_argument("-c", "--config-os", action="store_true", help="Opens a config menu that"
+                        "lets you select your Operating System.")
+
     title_group = parser.add_mutually_exclusive_group()
     title_group.add_argument("-t", "--type", choices=["show", "movie"], help="idenitifies the type of "
                              "video, either a show or movie, specified after this argument")
@@ -161,9 +171,10 @@ def setup_cmd_interface():
                              help="specifies video type as a movie. if [-s | -m | -t] "
                              "are unspecified, video type defaults to movie")
 
-    # browser_group = parser.add_mutually_exclusive_group()
-    parser.add_argument("-b", "--brave", action="store_true",
-                        help="launches show in brave browser instead of defaulting to Chrome")
+    # os_group = parser.add_mutually_exclusive_group()
+    # os_group.add_argument("-w", "--windows")
+    # os_group.add_argument()
+    # os_group.add_argument()
 
     args = parser.parse_args()
     return args
@@ -172,21 +183,46 @@ def setup_cmd_interface():
 def exception_handler(exception_type, exception, traceback):
     """
     Handles exceptions in a user-friendly format. Can be overriden to print the entire
-    stack trace using the -d and --debug tags. 
+    stack trace using the -d and --debug tags.
 
     Parameters:
     exception_type: type of exception
     exception: exception instance
-    traceback: instance of the stack trace 
+    traceback: instance of the stack trace
     """
     print("\nERROR: {}".format(exception))
+
+
+def save_os(filename, prompt):
+    op_sys = pyip.inputMenu(prompt=prompt, choices=[
+        "windows", "mac", "linux"], numbered=True)
+
+    with open(filename, "w+") as outfile:
+        json.dump({"operating system": op_sys}, outfile)
+
+
+def get_os(filename):
+    with open(filename, "r") as json_file:
+        data = json.load(json_file)
+        return data["operating system"]
 
 
 if __name__ == "__main__":
     try:
         args = setup_cmd_interface()
-        browser = "chrome"
+        chromedriver_path = "../chromedriver_"
 
+        defaults_filename = "defaults.json"
+        file_exists = os.path.isfile(defaults_filename)
+        os_prompt = "\nPlease choose the Operating System you would like to switch " \
+            "to:\n" if file_exists else "\nBefore you run this program, " \
+            "please select your Operating System:\n"
+
+        if args.config_os or not file_exists:
+            save_os(filename=defaults_filename, prompt=os_prompt)
+
+        chromedriver_path += get_os(filename=defaults_filename)
+        browser = "chrome"
         if args.brave:
             browser = "brave"
 
@@ -197,11 +233,20 @@ if __name__ == "__main__":
         if args.show or args.type == 'show':
             vid_type = 'show'
 
-        open_streaming_service(vid_type, args.name.strip(), browser=browser)
+        open_streaming_service(vid_type, args.name.strip(
+        ), browser=browser, chromedriver_path=chromedriver_path)
 
     except KeyboardInterrupt:
         print("\nShutting down...")
-    except WebDriverException:
-        raise WebDriverException(msg="Cannot run multiple instances of Chrome at once. "
-                                 "Please close all your browser tabs launched with this program "
-                                 "before running the program again.")
+    except WebDriverException as e:
+        msg = e.msg
+        if "chromedriver" in e.msg:
+            msg = "Incorrect Operating System chosen. Please reconfigure " \
+                "it using the \"-c\" or \"--config-os\" token."
+
+        if "--user-data-dir" in e.msg:
+            msg = "Cannot run multiple instances of Chrome at once. " \
+                "Please close all your browser tabs launched with this program " \
+                "before running the program again."
+
+        raise WebDriverException(msg=msg)
