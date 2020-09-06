@@ -14,9 +14,9 @@ from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 
 
-##### ADD/REMOVE SUBSCRIPTION SERVICES ON LINES 20-23 TO CHANGE THE ONES #####
+##### ADD/REMOVE SUBSCRIPTION SERVICES ON LINES 23-27 TO CHANGE THE ONES #####
 ##### THE PROGRAM OPENS. IF YOU REMOVE AN ENTIRE LIST, REMOVE THE LIST #####
-##### NAME ON LINE 43 AS WELL. #####
+##### NAME ON LINE 47 AS WELL. #####
 
 ### Can also change the order of the streaming services in ###
 ### each list to change the order in which they are opened ###
@@ -28,9 +28,6 @@ BUY = ["YouTube", "iTunes", "Google Play", "Microsoft Store"]
 
 
 DIRNAME = os.path.dirname(__file__)
-# CHROME_DRIVER_PATH = "../chromedriver_linux"
-# # CHROME_DRIVER_PATH = "../chromedriver_mac"
-# # CHROME_DRIVER_PATH = "../chromedriver_windows"
 
 BASE_URL = "https://decider.com/"
 
@@ -49,7 +46,10 @@ def open_streaming_service(vid_type, name, chromedriver_path, browser="chrome"):
     ### Can also change the order of the lists to change the search order ###
     all_services = SUBSCRIPTION_LIST + FREE_SERVICES + BUY + CABLE_LIST
 
-    url_name = name.lower().replace(" ", "-")
+    # replace all punctutation in the name with a space,
+    # and all whitespace with a dash
+    no_punct_name = re.sub(r"[,.;@#?!&$]+\ *", " ", name)
+    url_name = re.sub(r"\s+", '-', no_punct_name.lower())
     url = BASE_URL + vid_type + "/" + url_name
 
     response = requests.get(url)
