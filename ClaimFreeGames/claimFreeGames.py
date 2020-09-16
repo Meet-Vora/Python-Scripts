@@ -1,6 +1,7 @@
 from pprint import pprint
 
 import time
+import os
 # import requests
 from bs4 import BeautifulSoup
 # from lxml import html
@@ -15,7 +16,8 @@ from selenium.common.exceptions import *
 # Get a list of all the free games available
 # Click on each one, and then grab them for free
 
-CHROME_DRIVER_PATH = "../chromedriver_linux"
+DIRNAME = os.path.dirname(__file__)
+CHROME_DRIVER_PATH = os.path.join(DIRNAME, "../chromedriver_linux")
 # CHROME_DRIVER_PATH = "../chromedriver_mac"
 # CHROME_DRIVER_PATH = "../chromedriver_windows"
 
@@ -118,7 +120,7 @@ def find(driver, path, search_type='xpath'):
 def get_game_links():
     driver = setup_driver()
     sleep()
-    login_xpath = "//*[@title = 'Sign in']"
+    login_xpath = "//a[@title = 'Sign In']"
 
     if logged_in(driver, login_xpath):
         game_divs, game_links = [], []
@@ -137,7 +139,7 @@ def get_game_links():
         print("Claimed all games!")
     else:
         click_element(driver, login_xpath)
-        print("Please log into the Epic Games store,"
+        print("Please log into the Epic Games store, "
               "close the browser, and then run the program again.")
     # for elem in games:
     #     # elem = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, className)))
@@ -206,9 +208,10 @@ def setup_driver(url=BASE_URL + FREEGAME_URL_EXTENSION):
     webdriver instance
     """
     # url = BASE_URL + "/store/en-US/free-games"
+    data_dir = os.path.join(DIRNAME, ".config/google-chrome")
     options = webdriver.ChromeOptions()
     options.add_argument(
-        "user-data-dir={}".format(".config/google-chrome"))
+        "user-data-dir={}".format(data_dir))
 
     ##### UNCOMMENT NEXT TWO LINES TO USE BRAVE BROWSER #####
     # brave_path = "/usr/bin/brave-browser"
